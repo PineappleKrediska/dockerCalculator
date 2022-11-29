@@ -1,0 +1,76 @@
+version: '3.7'
+
+networks:
+  application:
+    name: application
+    external: true
+  services:
+    name: services
+    external: true
+  resource:
+    name: resource
+    external: true
+  local_calculator:
+    name: local_calculator
+
+services:
+
+  calculator-php:
+    container_name: calculator-php
+    image: calculator-image:php
+    restart: always
+    volumes:
+      - ".:/var/www/calculator"
+      - "./.docker/app/conf/php-8.1.ini:/usr/local/etc/php/php.ini"
+    networks:
+      - local_calculator
+      - services
+      - resource
+    depends_on:
+      - calculator-db
+    hostname: app.calculator.loc
+
+  calculator-db:
+    container_name: calculator-db
+    build:
+      context: .docker/db
+    restart: always
+    image: calculator-image/db:latest
+    ports:
+      - 30200:5432
+    networks:
+      - resource
+      - local_calculator
+    environment:
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: developer
+      POSTGRES_DB: calculator
+      POSTGRES_HOST_AUTH_METHOD: password
+    hostname: db.calculator.res
+
+
+  calculator-nginx-app:
+    container_name: calculator-nginx-app
+    image: calculator-image/nginx-app:latest
+    restart: always
+    ports:
+      - "10200:8080"
+    networks:
+      - application
+      - local_calculator
+    depends_on:
+      - calculator-php
+    hostname: api.calculator.app
+
+  calculator-nginx-srv:
+    container_name: calculator-nginx-srv
+    image: calculator-image/nginx-srv:latest
+    restart: always
+    ports:
+      - 20200:9080
+    networks:
+      - services
+      - local_calculator
+    depends_on:
+      - calculator-php
+    hostname: api.calculator.srv

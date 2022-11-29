@@ -1,0 +1,29 @@
+services:
+  app.api.v1.server:
+    class: UMA\JsonRpc\Server
+    factory: [ '@App\Api\ServerFactory', 'create' ]
+    arguments:
+      $container: '@service_container'
+      $methods:
+        sum: app.api.v1.method.sum
+        sub: app.api.v1.method.sub
+        mul: app.api.v1.method.mul
+        div: app.api.v1.method.div
+
+  app.api.v1.method.sum:
+    class: App\Api\V1\GetSum
+    public: true
+    arguments:
+      $calculateService: '@App\Service\CalculateService'
+
+  app.api.v1.method.sub:
+    class: App\Api\V1\GetSub
+    public: true
+
+  app.api.v1.method.mul:
+    class: App\Api\V1\GetMul
+    public: true
+
+  app.api.v1.method.div:
+    class: App\Api\V1\GetDiv
+    public: true
